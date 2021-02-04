@@ -104,8 +104,9 @@ def pic(f, ncells, L):
     """ f contains the position and velocity of all particles
     """
     nparticles = len(f)/2     # Two values for each particle
-    pos = f[0:nparticles] # Position of each particle
-    vel = f[nparticles:]      # Velocity of each particle
+    nparticles_int = int(nparticles)# convert to integer
+    pos = f[0:nparticles_int] # Position of each particle
+    vel = f[nparticles_int:]      # Velocity of each particle
 
     dx = L / float(ncells)    # Cell spacing
 
@@ -228,7 +229,7 @@ class Summary:
         # Amplitude of the first harmonic
         fh = 2.*abs(fft(d)[1]) / float(ncells)
         
-        print "Time:", t, "First:", fh
+        print("Time:", t, "First:", fh)
         
         self.t.append(t)
         self.firstharmonic.append(fh)
