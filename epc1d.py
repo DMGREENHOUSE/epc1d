@@ -5,6 +5,9 @@
 from numpy import arange, concatenate, zeros, linspace, floor, array, pi
 from numpy import sin, cos, sqrt, random, histogram
 
+from scipy import interpolate
+from numpy import append, argmin, argmax
+
 import matplotlib.pyplot as plt # Matplotlib plotting library
 
 try:
@@ -276,6 +279,64 @@ def twostream(npart, L, vbeam=2):
 
 ####################################################################
 
+def is_pos_diff(vals, test_index):
+    is_this_pos_grad = None
+    diff = vals[test_index+1]-vals[test_index]
+    if diff >= 0:
+        is_this_pos_grad = True
+    else:
+        is_this_pos_grad = False
+    return is_this_pos_grad
+
+def turn_point(xs, interp, target_index, is_min):
+    N = 10
+    LH = xs[target_index-1]
+    RH = xs[target_index+ 1]
+    x = linspace(LH, RH, num=N)
+    y = interp(x)
+    turn_index = None
+    if is_min:
+        turn_index = argmin(y)
+    else:
+        turn_index = argmax(y)
+    turn_point_y = y[turn_index]
+    turn_point_x = x[turn_index]
+    return turn_point_x, turn_point_y
+
+# for finding minimum and maximum of first harmonic - time spectrum
+def analyse_first_harmonic_time(ts, fhs):
+    max_pos_indexes = []
+    min_pos_indexes = []
+    is_prev_pos_grad = is_pos_diff(fhs, 0)
+    for i in range(len(fhs)-1):
+        # check if this one is a positive gradient
+        is_this_pos_grad = is_pos_diff(fhs, i)
+        # check for change from previous
+        if is_prev_pos_grad and not is_this_pos_grad:
+            max_pos_indexes.append(i)
+        if not is_prev_pos_grad and is_this_pos_grad:
+            min_pos_indexes.append(i)
+        is_prev_pos_grad = is_this_pos_grad
+    f = interpolate.interp1d(ts, fhs, kind='quadratic')
+    # do the first one
+    x,y = turn_point(ts, f, 1, False)
+    plt.plot(x, y, 'o', color='k')
+    for min_index in min_pos_indexes:
+        x,y = turn_point(ts, f, min_index, True)
+        plt.plot(x, y, 'x', color='r')
+    for max_index in max_pos_indexes:
+        x,y = turn_point(ts, f, max_index, False)
+        plt.plot(x, y, 'o', color='k')
+    
+    
+    xnew = arange(ts[0], ts[-1], 0.05)
+    ynew = f(xnew)   # use interpolation function returned by `interp1d`
+    plt.plot(ts, fhs, 'o', xnew, ynew, '-')
+    plt.plot(ts, fhs)
+    plt.show()
+     
+####################################################################
+
 if __name__ == "__main__":
     # Generate initial condition
     #
@@ -291,7 +352,7 @@ if __name__ == "__main__":
         npart = 1000
         pos, vel = landau(npart, L)
     is_plot_animation = False
-    is_print_harmonics = False
+    is_print_harmonics = True
     # Create some output classes
     p = Plot(pos, vel, ncells, L, is_plot_animation) # This displays an animated figure
     s = Summary(is_print_harmonics)                 # Calculates, stores and prints summary info
@@ -302,6 +363,7 @@ if __name__ == "__main__":
                    output_times=linspace(0.,20,50)) # The times to output
     
     # Summary stores an array of the first-harmonic amplitude
+    analyse_first_harmonic_time(s.t, s.firstharmonic)
     # Make a semilog plot to see exponential damping
     plt.figure()
     plt.plot(s.t, s.firstharmonic)
