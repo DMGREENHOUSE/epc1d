@@ -222,9 +222,10 @@ class Plot:
         
 
 class Summary:
-    def __init__(self):
+    def __init__(self, is_print_harmonics):
         self.t = []
         self.firstharmonic = []
+        self.is_print_harmonics = is_print_harmonics
         
     def __call__(self, pos, vel, ncells, L, t):
         # Calculate the charge density
@@ -233,7 +234,8 @@ class Summary:
         # Amplitude of the first harmonic
         fh = 2.*abs(fft(d)[1]) / float(ncells)
         
-        print("Time:", t, "First:", fh)
+        if self.is_print_harmonics:
+            print("Time:", t, "First:", fh)
         
         self.t.append(t)
         self.firstharmonic.append(fh)
@@ -289,9 +291,10 @@ if __name__ == "__main__":
         npart = 1000
         pos, vel = landau(npart, L)
     is_plot_animation = False
+    is_print_harmonics = False
     # Create some output classes
     p = Plot(pos, vel, ncells, L, is_plot_animation) # This displays an animated figure
-    s = Summary()                 # Calculates, stores and prints summary info
+    s = Summary(is_print_harmonics)                 # Calculates, stores and prints summary info
     
     # Run the simulation
     pos, vel = run(pos, vel, L, ncells, 
