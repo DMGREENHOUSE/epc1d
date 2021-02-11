@@ -228,6 +228,7 @@ class Summary:
     def __init__(self, is_print_harmonics):
         self.t = []
         self.firstharmonic = []
+        self.firstharmonic_no_abs = []
         self.is_print_harmonics = is_print_harmonics
         
     def __call__(self, pos, vel, ncells, L, t):
@@ -236,12 +237,14 @@ class Summary:
         
         # Amplitude of the first harmonic
         fh = 2.*abs(fft(d)[1]) / float(ncells)
+        fh_no_abs = 2.*fft(d)[1] / float(ncells)
         
         if self.is_print_harmonics:
             print("Time:", t, "First:", fh)
         
         self.t.append(t)
         self.firstharmonic.append(fh)
+        self.firstharmonic_no_abs.append(fh_no_abs)
 
 ####################################################################
 # 
@@ -303,9 +306,14 @@ def turn_point(xs, interp, target_index, is_min):
     turn_point_x = x[turn_index]
     return turn_point_x, turn_point_y
 
+def flip():
+    # fit an exponential to the minimum points
+    # subtract difference from exponential for every other peak
+    pass
+
 # for finding minimum and maximum of first harmonic - time spectrum
 def analyse_first_harmonic_time(ts, fhs):
-    max_pos_indexes = []
+    max_pos_indexes = [1] # the first is a peak
     min_pos_indexes = []
     is_prev_pos_grad = is_pos_diff(fhs, 0)
     for i in range(len(fhs)-1):
@@ -318,21 +326,25 @@ def analyse_first_harmonic_time(ts, fhs):
             min_pos_indexes.append(i)
         is_prev_pos_grad = is_this_pos_grad
     f = interpolate.interp1d(ts, fhs, kind='quadratic')
-    # do the first one
-    x,y = turn_point(ts, f, 1, False)
-    plt.plot(x, y, 'o', color='k')
+    x_minima, y_minima, x_maxima, y_maxima = [], [], [], []
     for min_index in min_pos_indexes:
         x,y = turn_point(ts, f, min_index, True)
-        plt.plot(x, y, 'x', color='r')
+        x_minima.append(x)
+        y_minima.append(y)
+        plt.plot(x, y, 'x', color='r', label='Minima')
     for max_index in max_pos_indexes:
         x,y = turn_point(ts, f, max_index, False)
-        plt.plot(x, y, 'o', color='k')
-    
+        x_maxima.append(x)
+        y_maxima.append(y)
+        plt.plot(x, y, 'o', color='k', label='Maxima')
     
     xnew = arange(ts[0], ts[-1], 0.05)
     ynew = f(xnew)   # use interpolation function returned by `interp1d`
-    plt.plot(ts, fhs, 'o', xnew, ynew, '-')
-    plt.plot(ts, fhs)
+    plt.plot(ts, fhs, 'o', xnew, ynew, '-', label='Curve Fit in Peak Region')
+    plt.plot(ts, fhs, label='Underlying Data')
+    plt.xlabel("Time [Normalised]")
+    plt.ylabel("First harmonic amplitude [Normalised]")
+    plt.legend()
     plt.show()
      
 ####################################################################
@@ -364,6 +376,7 @@ if __name__ == "__main__":
     
     # Summary stores an array of the first-harmonic amplitude
     analyse_first_harmonic_time(s.t, s.firstharmonic)
+    analyse_first_harmonic_time(s.t, s.firstharmonic_no_abs)
     # Make a semilog plot to see exponential damping
     plt.figure()
     plt.plot(s.t, s.firstharmonic)
