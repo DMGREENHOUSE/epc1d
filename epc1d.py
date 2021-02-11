@@ -331,16 +331,16 @@ def analyse_first_harmonic_time(ts, fhs):
         x,y = turn_point(ts, f, min_index, True)
         x_minima.append(x)
         y_minima.append(y)
-        plt.plot(x, y, 'x', color='r', label='Minima')
+        plt.plot(x, y, 'x', color='r')
     for max_index in max_pos_indexes:
         x,y = turn_point(ts, f, max_index, False)
         x_maxima.append(x)
         y_maxima.append(y)
-        plt.plot(x, y, 'o', color='k', label='Maxima')
+        plt.plot(x, y, 'o', color='k')
     
     xnew = arange(ts[0], ts[-1], 0.05)
     ynew = f(xnew)   # use interpolation function returned by `interp1d`
-    plt.plot(ts, fhs, 'o', xnew, ynew, '-', label='Curve Fit in Peak Region')
+    plt.plot(ts, fhs, xnew, ynew, '-', label='Curve Fit in Peak Region')
     plt.plot(ts, fhs, label='Underlying Data')
     plt.xlabel("Time [Normalised]")
     plt.ylabel("First harmonic amplitude [Normalised]")
