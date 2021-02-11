@@ -306,11 +306,6 @@ def turn_point(xs, interp, target_index, is_min):
     turn_point_x = x[turn_index]
     return turn_point_x, turn_point_y
 
-def flip():
-    # fit an exponential to the minimum points
-    # subtract difference from exponential for every other peak
-    pass
-
 # for finding minimum and maximum of first harmonic - time spectrum
 def analyse_first_harmonic_time(ts, fhs):
     max_pos_indexes = [1] # the first is a peak
