@@ -20,7 +20,9 @@ except:
 from calc_density import calc_density
 
 class Data_Run:
-    def __init__(self, is_Landau=True, L=None, ncells=None, npart=None, is_plot_animation = False, is_print_harmonics = True):
+    def __init__(self, is_Landau=True, L=None, ncells=None, npart=None,
+                 time_length = 20, num_time_steps = 50,
+                 is_plot_animation = False, is_print_harmonics = True):
         # Generate initial condition
         #
         self.is_Landau = is_Landau
@@ -37,7 +39,9 @@ class Data_Run:
             self.ncells = 20 if ncells == None else ncells
             self.npart = 10000 if npart == None else npart
             pos, vel = self.twostream(self.npart, self.L, 3.)
-            
+        
+        self.time_length = time_length
+        self.num_time_steps = num_time_steps
         # Create some output classes
         p = Plot(pos, vel, self.ncells, self.L, is_plot_animation) # This displays an animated figure
         self.s = Summary(is_print_harmonics)                 # Calculates, stores and prints summary info
@@ -45,16 +49,18 @@ class Data_Run:
         # Run the simulation
         pos, vel = self.run(pos, vel, self.L, self.ncells, 
                        out=[p, self.s],                      # These are called each output
-                       output_times=linspace(0.,20,50)) # The times to output
+                       output_times=linspace(0.,self.time_length,self.num_time_steps)) # The times to output
         
     def get_summary(self):
         return self.s
         
-    def get_is_Landau(self):
-        return self.is_Landau
-        
-    def get_is_2SI(self):
-        return not self.is_Landau
+    def get_type(self):
+        this_type = None
+        if self.is_Landau:
+            this_type = 'LD'
+        else:
+            this_type = '2SI'
+        return this_type
         
     def get_L(self):
         return self.L
@@ -64,6 +70,12 @@ class Data_Run:
         
     def get_npart(self):
         return self.npart
+        
+    def get_time_length(self):
+        return self.time_length
+        
+    def get_num_time_steps(self):
+        return self.num_time_steps
     
     def run(self, pos, vel, L, ncells=None, out=[], output_times=linspace(0,20,100), cfl=0.5):
         
