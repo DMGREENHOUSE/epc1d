@@ -6,6 +6,7 @@ from Summary import Summary
 from Plot import Plot
 from numpy import arange, concatenate, linspace, floor, array, pi
 from numpy import sin, cos, sqrt, random
+import time
 
 
 
@@ -23,6 +24,7 @@ class Data_Run:
                  time_length = 20, num_time_steps = 50,
                  is_plot_animation = False, is_print_harmonics = True,
                  iteration_num=0):
+        start = time.time()
         # Generate initial condition
         #
         self.is_Landau = is_Landau
@@ -51,9 +53,15 @@ class Data_Run:
         pos, vel = self.run(pos, vel, self.L, self.ncells, 
                        out=[p, self.s],                      # These are called each output
                        output_times=linspace(0.,self.time_length,self.num_time_steps)) # The times to output
+        end = time.time()
+        self.time_taken = end-start
+        self.s.add_time_taken(self.time_taken)
         
     def get_summary(self):
         return self.s
+    
+    def get_time_taken(self):
+        return self.time_taken
         
     def get_type(self):
         this_type = None

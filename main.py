@@ -11,6 +11,8 @@ import pickle
 import helper_functions as hf
 import time
 from scanner import scan_range
+import matplotlib.pyplot as plt # Matplotlib plotting library
+
 
 import numpy
 
@@ -18,7 +20,69 @@ from calc_density import calc_density
 from calc_density_old import calc_density_old
 from calc_density_adapted import calc_density_adapted
 
+def scan_num_parts():
+    # constants
+    ncells = 20
+    npart = 1000
+    time_length = 20
+    num_time_steps = 50
+    L=4*numpy.pi
+    constants = [ncells, npart, time_length, num_time_steps,L] # [ncells,npart,time_length,num_time_steps,L]
+    
+    # variable
+    scan_var = 'npart'#'ncells'/'npart'/'time_length'/'num_time_steps'/'length'
+    num_repeats = 10
+    start_var = numpy.log10(10)
+    stop_var =  numpy.log10(1000000)
+    N = 6
+    is_log = True
+    this_log_base = 10.0
+    
+    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
+
+def scan_numTimeSteps():
+    # constants
+    ncells = 20
+    npart = 1000
+    time_length = 20
+    num_time_steps = 50
+    L=4*numpy.pi
+    constants = [ncells, npart, time_length, num_time_steps,L]  # [ncells,npart,time_length,num_time_steps,L]
+    
+    scan_var = 'num_time_steps'#'ncells'/'npart'/'time_length'/'num_time_steps'/'length'
+    num_repeats = 10
+    start_var = 5
+    stop_var =  250
+    N = 20
+    is_log = False
+    this_log_base = 10.0
+    
+    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
+
+def scan_L():
+    # constants
+    ncells = 20
+    npart = 1000
+    time_length = 20
+    num_time_steps = 50
+    L=4*numpy.pi
+    constants = [ncells, npart, time_length, num_time_steps,L]  # [ncells,npart,time_length,num_time_steps,L]
+    
+    scan_var = 'length'#'ncells'/'npart'/'time_length'/'num_time_steps'/'length'
+    num_repeats = 10
+    start_var = 0.5*numpy.pi
+    stop_var =  10*numpy.pi
+    N = 20
+    print(numpy.linspace(start_var,stop_var,N))
+    is_log = False
+    this_log_base = 10.0
+    
+    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
+    
 if __name__ == "__main__":
+    scan_L()
+    
+    
     """
     N = 500000
     L = 10
@@ -46,15 +110,26 @@ if __name__ == "__main__":
     print(calc_density_adapted_results)
     
     """
-    scan_var = 'npart'#'ncells'/'npart'/'time_length'/'num_time_steps'
-    num_repeats = 1
-    start_var = 1000
-    stop_var = 1000
-    N = 1
-    is_log = False
-    constants = [100, 100, 50, 100] # [ncells,npart,time_length,num_time_steps]
+    """
+    # constants
+    ncells = 20
+    npart = 1000
+    time_length = 20
+    num_time_steps = 50
+    constants = [ncells, npart, time_length, num_time_steps] # [ncells,npart,time_length,num_time_steps]
     
-    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants)
+    # variables 
+    scan_var = 'ncells'#'ncells'/'npart'/'time_length'/'num_time_steps'
+    num_repeats = 10
+    start_var = numpy.log2(10)
+    stop_var =  numpy.log2(320)
+    N = 6
+    is_log = True
+    this_log_base = 2.0
+    
+    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
+    """
+    
     """
     start = time.time()
     new_data_run = Data_Run(ncells=10, npart=1000,time_length = 50, num_time_steps = 100)

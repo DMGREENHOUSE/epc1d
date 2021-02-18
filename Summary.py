@@ -18,6 +18,7 @@ class Summary:
         self.firstharmonic = []
         self.firstharmonic_no_abs = []
         self.is_print_harmonics = is_print_harmonics
+        self.time_taken = None
         
     def __call__(self, pos, vel, ncells, L, t):
         # Calculate the charge density
@@ -33,3 +34,9 @@ class Summary:
         self.t.append(t)
         self.firstharmonic.append(fh)
         self.firstharmonic_no_abs.append(fh_no_abs)
+    
+    def add_time_taken(self, time_taken):
+        self.time_taken = time_taken
+    
+    def get_time_taken(self):
+        return self.time_taken
