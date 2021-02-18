@@ -24,7 +24,7 @@ def calc_density(position, ncells, L):
     nparticles = len(position)
     
     dx = L / ncells       # Uniform cell spacing
-    OLD = False
+    OLD = True
     #if (ncells>nparticles):
     if OLD:
     
@@ -35,8 +35,7 @@ def calc_density(position, ncells, L):
             density[(plower + 1) % ncells] += offset
         # nparticles now distributed amongst ncells
         density *= float(ncells) / float(nparticles)  # Make average density equal to 1
-   
-    
+        """
     else:
         density_next = zeros([ncells+1])
         for p in position / dx:    # Loop over all the particles, converting position into a cell number
@@ -49,23 +48,23 @@ def calc_density(position, ncells, L):
         density[0] += density_next[-1]
         # nparticles now distributed amongst ncells
         density *= float(ncells) / float(nparticles)  # Make average density equal to 1
-    """
+        """
     else:
         cells = arange(ncells+1)
         position/=dx # convert position into a cell number
         counts = ones(nparticles)
         df = DataFrame({"positions": position, "count":counts})
         df["bin"] = cut(df["positions"], cells) # bin into the cells
-        #df = df.sort_values(by="bin")
-        #df = df.groupby('bin').sum() # sum up bins
-        #summed = df["positions"].values
-        #count = df["count"].values
-        #base_column = (cells[0:-1]+1)*count-summed
-        #next_column = concatenate(([summed[-1]],summed[0:-1]))
+        df = df.groupby('bin').sum() # sum up bins
+        df = df.sort_values(by="bin")
+        summed = df["positions"].values
+        count = df["count"].values
+        base_column = (cells[0:-1]+1)*count-summed
+        next_column = concatenate(([summed[-1]],summed[0:-1]))
         
-        #density = base_column+next_column
+        density = base_column+next_column
         density *= float(ncells) / float(nparticles)  # Make average density equal to 1
-    """
+    
     """
     else:
         cells = arange(ncells+1)

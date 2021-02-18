@@ -8,7 +8,6 @@ from numpy import arange, concatenate, linspace, floor, array, pi
 from numpy import sin, cos, sqrt, random
 
 
-import matplotlib.pyplot as plt # Matplotlib plotting library
 
 # Need an FFT routine, either from SciPy or NumPy
 try:
@@ -22,7 +21,8 @@ from calc_density import calc_density
 class Data_Run:
     def __init__(self, is_Landau=True, L=None, ncells=None, npart=None,
                  time_length = 20, num_time_steps = 50,
-                 is_plot_animation = False, is_print_harmonics = True):
+                 is_plot_animation = False, is_print_harmonics = True,
+                 iteration_num=0):
         # Generate initial condition
         #
         self.is_Landau = is_Landau
@@ -42,6 +42,7 @@ class Data_Run:
         
         self.time_length = time_length
         self.num_time_steps = num_time_steps
+        self.iteration_num = iteration_num
         # Create some output classes
         p = Plot(pos, vel, self.ncells, self.L, is_plot_animation) # This displays an animated figure
         self.s = Summary(is_print_harmonics)                 # Calculates, stores and prints summary info
@@ -61,7 +62,8 @@ class Data_Run:
         else:
             this_type = '2SI'
         return this_type
-        
+    def get_iteration_num(self):
+        return self.iteration_num
     def get_L(self):
         return self.L
         
