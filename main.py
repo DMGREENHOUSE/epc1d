@@ -73,7 +73,6 @@ def scan_L():
     start_var = 0.5*numpy.pi
     stop_var =  10*numpy.pi
     N = 20
-    print(numpy.linspace(start_var,stop_var,N))
     is_log = False
     this_log_base = 10.0
     

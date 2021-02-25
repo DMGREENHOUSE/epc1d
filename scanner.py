@@ -235,6 +235,10 @@ def analyse_scan_range(scan_var, num_repeats, start, stop, N, is_log,
             results_no_log =  new_analysis.get_results_nolog()
             results_no_abs =  new_analysis.get_results_noabs()
             results_time =  new_analysis.get_results_time()
+            results_frequency =  new_analysis.get_results_frequency()
+            results_frequency_err =  new_analysis.get_results_frequency_err()
+            print('LOOK: ')
+            print(results_frequency, results_frequency_err)
             if results_log[0] is not None:
                 this_noise_log_method.append(results_log[0])
             if results_log[1] is not None:

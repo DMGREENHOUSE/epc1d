@@ -4,8 +4,8 @@ Class for an Analysis of a Data Run
 """
 from Summary import Summary
 
-from numpy import arange, linspace, log, mean
-from numpy import argmin, argmax, exp, zeros
+from numpy import arange, linspace, log, mean, pi, concatenate
+from numpy import argmin, argmax, exp, zeros, array, std, sort
 
 from scipy import interpolate, optimize
 import matplotlib.pyplot as plt # Matplotlib plotting library
@@ -13,24 +13,46 @@ class Analysis:
     """
     Displays three plots: phase space, charge density, and velocity distribution
     """
-    def __init__(self, this_Summary, is_plot_graphs):
+    def __init__(self, this_Summary, is_plot_graphs, METHOD='Method 2'):
+        # find the method to be used
+        """
+        is_abs = None
+        is_log = None
+        if METHOD == 'Method 1':
+            is_abs = True
+            is_log = True
+        elif METHOD == 'Method 2':
+            is_abs = True
+            is_log = False
+        elif METHOD == 'Method 3':
+            is_abs = False
+            is_log = False
+        else:
+            print('ERROR: invalid method')
+            """
+        
         s = this_Summary
-        self.time_taken = s.get_time_taken()
+        # this was a late implementation so only get if possible
+        self.time_taken = None
+        try:
+            self.time_taken = s.get_time_taken()
+        except:
+            pass
         is_print_results = False
         is_print_data_point_warning = False
         
         # Summary stores an array of the first-harmonic amplitude
         
         # Find Analysis for semi-log approach
-        self.log_noise_floor, self.log_damping_rate = self.analyse_first_harmonic_time(
+        self.log_noise_floor, self.log_damping_rate, self.frequency, self.frequency_err = self.analyse_first_harmonic_time(
                 s.t, s.firstharmonic, True, True, is_plot_graphs, is_print_data_point_warning)
         
         # Find Analysis for no log approach
-        self.nolog_noise_floor, self.nolog_damping_rate  = self.analyse_first_harmonic_time(
+        self.nolog_noise_floor, self.nolog_damping_rate, self.frequency, self.frequency_err  = self.analyse_first_harmonic_time(
                 s.t, s.firstharmonic, True, False, is_plot_graphs, is_print_data_point_warning)
         
         # Find Analysis for no log, no abs approach
-        self.noabs_noise_floor, self.noabs_damping_rate  = self.analyse_first_harmonic_time(
+        self.noabs_noise_floor, self.noabs_damping_rate, self.frequency, self.frequency_err  = self.analyse_first_harmonic_time(
                 s.t, s.firstharmonic_no_abs, False, False, is_plot_graphs, is_print_data_point_warning)
         
         if is_print_results:
@@ -44,6 +66,12 @@ class Analysis:
         # Make a semilog plot to see exponential damping
         if is_plot_graphs:
             self.plot_semilog(s.t, s.firstharmonic)
+
+    def get_results_frequency(self):
+        return self.frequency
+
+    def get_results_frequency_err(self):
+        return self.frequency_err
     
     def get_results_time(self):
         return self.time_taken
@@ -104,8 +132,8 @@ class Analysis:
                  [-2,-1,-1]
                 ]
             
-        xmaxs,ymaxs, average_noise = self.find_suitable_points(is_max, xmaxs, ymaxs, is_plot_graphs)
-        num_found = len(xmaxs)
+        suit_xs, suit_ys, average_noise = self.find_suitable_points(is_max, xmaxs, ymaxs, is_plot_graphs)
+        num_found = len(suit_xs)
         SKIP = False
         if num_found <= 3:
             if is_print_data_point_warning:
@@ -121,9 +149,9 @@ class Analysis:
             while count<count_lim:
                 # try with first fit
                 if is_semi_log:
-                    fit_vals, cov_vals = self.perform_two_fit(func, xmaxs,ymaxs,nulls_two[count])
+                    fit_vals, cov_vals = self.perform_two_fit(func, suit_xs,ymaxs,nulls_two[count])
                 else:
-                    fit_vals, cov_vals = self.perform_three_fit(func, xmaxs,ymaxs,nulls_three[count])
+                    fit_vals, cov_vals = self.perform_three_fit(func, suit_xs,ymaxs,nulls_three[count])
                 is_bad_fit = False
                 if not SKIP:
                     is_bad_fit = self.check_covariances(cov_vals)
@@ -135,10 +163,10 @@ class Analysis:
         if count == 3 or SKIP:
             # no good fit was found
             #print('None found', fit_vals)
-            return None, average_noise
+            return None, average_noise, suit_xs
         else:
             # a good fit was found
-            return fit_vals, average_noise
+            return fit_vals, average_noise, suit_xs
     
     def plot_semilog(self, x, y):
         plt.figure()
@@ -210,17 +238,49 @@ class Analysis:
                 noise_x_points.append(this_point)
                 noise_y_points.append(potential_y)
         average_noise = mean(noise_y_points)
+        
+        # was a suitable point but now below the average noise
+        
+        # remove 'suitables' if below the noise floor
+        suit_xs, suit_ys, no_longer_xs, no_longer_ys = self.check_suitables_for_noise_floor(suitable_x_points, suitable_y_points, average_noise, is_max)
+        
+        
         if is_plot_graphs and is_max:         
-            plt.plot(suitable_x_points, suitable_y_points, 'o', color='k', label='Suitable Maxima')
+            plt.plot(suit_xs, suit_ys, 'o', color='k', label='Suitable Maxima')
+            plt.plot(no_longer_xs, no_longer_ys, '^', color='k', label='No Longer Suitable Maxima')
             plt.plot(noise_x_points, noise_y_points, 'x', color='k', label='Noise Maxima')
             plt.axhline(y=average_noise, linestyle='--', color='k', label='Average Noise Maxima')
         elif is_plot_graphs and not is_max:
-            plt.plot(suitable_x_points, suitable_y_points, 'o', color='r', label='Suitable Minima')
+            plt.plot(suit_xs, suit_ys, 'o', color='r', label='Suitable Minima')
+            plt.plot(no_longer_xs, no_longer_ys, '^', color='r', label='No Longer Suitable Minima')
             plt.plot(noise_x_points, noise_y_points, 'x', color='r', label='Noise Minima')
             plt.axhline(y=average_noise, linestyle='--', color='r', label='Average Noise Maxima')
             
-        return suitable_x_points, suitable_y_points, average_noise
+        return suit_xs, suit_ys, average_noise
         
+    def check_suitables_for_noise_floor(self,suitable_x_points, suitable_y_points, average_noise, is_max):
+        new_suitable_xs = []
+        new_suitable_ys = []
+        no_longer_suitable_xs = []
+        no_longer_suitable_ys = []
+        if is_max:
+            for i in range(len(suitable_y_points)):
+                if suitable_y_points[i] >= average_noise:
+                    new_suitable_xs.append(suitable_x_points[i])
+                    new_suitable_ys.append(suitable_y_points[i])
+                else:
+                    no_longer_suitable_xs.append(suitable_x_points[i])
+                    no_longer_suitable_ys.append(suitable_y_points[i])
+        else:
+            for i in range(len(suitable_y_points)):
+                if suitable_y_points[i] <= average_noise:
+                    new_suitable_xs.append(suitable_x_points[i])
+                    new_suitable_ys.append(suitable_y_points[i])
+                else:
+                    no_longer_suitable_xs.append(suitable_x_points[i])
+                    no_longer_suitable_ys.append(suitable_y_points[i])
+            
+        return new_suitable_xs, new_suitable_ys, no_longer_suitable_xs, no_longer_suitable_ys
     
     # for finding minimum and maximum of first harmonic - time spectrum
     def analyse_first_harmonic_time(self, ts, fhs, is_abs, is_semi_log, is_plot_graphs, is_print_data_point_warning):
@@ -262,13 +322,19 @@ class Analysis:
         
         minima_fits = []
         minima_average_noise = None
+        suit_xs = None
+        maxima_fits, maxima_average_noise, suit_xs = self.fit(is_semi_log, func, True, x_maxima, y_maxima, is_plot_graphs, is_print_data_point_warning)
+        suit_xs = array(suit_xs)
         if not is_abs:
-            minima_fits, minima_average_noise = self.fit(is_semi_log, func, False, x_minima, y_minima, is_plot_graphs, is_print_data_point_warning)
-        maxima_fits, maxima_average_noise = self.fit(is_semi_log, func, True, x_maxima, y_maxima, is_plot_graphs, is_print_data_point_warning)
+            minima_fits, minima_average_noise, suit_min_xs = self.fit(is_semi_log, func, False, x_minima, y_minima, is_plot_graphs, is_print_data_point_warning)
+            suit_min_xs = array(suit_min_xs)
+            suit_xs = concatenate([suit_xs, suit_min_xs])
+            suit_xs = sort(suit_xs)
         
         noise_floor = self.find_noise_floor(is_abs, is_semi_log,
                               minima_fits, minima_average_noise,
                               maxima_fits, maxima_average_noise)
+        
         damping_rate = self.find_damping_rate(is_abs, is_semi_log,
                               minima_fits, minima_average_noise,
                               maxima_fits, maxima_average_noise)
@@ -292,8 +358,54 @@ class Analysis:
             plt.legend()
             plt.ioff() # This so that the windows stay open
             plt.show()
-        return noise_floor, damping_rate
+        frequency, frequency_err = self.find_average_frequency(suit_xs)
         
+        return noise_floor, damping_rate, frequency, frequency_err
+    def find_average_frequency(self, suit_xs):
+        print('suit_xs', suit_xs)
+        angular_frequencies = []
+        for i in range(len(suit_xs)-1):
+            time_diff = suit_xs[i+1] - suit_xs[i]
+            full_time_period = 2*time_diff # with abs we see both
+            frequency = 1/full_time_period
+            angular_frequencies.append(2*pi*frequency) # convert to angular frequency
+        # find average and standard deviation
+        print('Angular Frequency Array: ', angular_frequencies)
+        np_angular_frequencies = array(angular_frequencies)
+        ave_frequency = mean(np_angular_frequencies)
+        err = std(np_angular_frequencies)
+        return ave_frequency, err
+    """
+    def find_average_frequency(self, is_abs, is_semi_log,suit_xs):
+        print('is_abs: ', is_abs)
+        print('is_semi_log: ', is_semi_log)
+        print('minima_fits: ', minima_fits)
+        print('maxima_fits: ', maxima_fits)
+        frequencies = []
+        if is_semi_log or is_abs:
+            for i in range(len(maxima_fits)-1):
+                time_diff = maxima_fits[i+1] - maxima_fits[i]
+                full_time_period = 2*time_diff # with abs we see both
+                frequency = 1/full_time_period
+                frequencies.append(frequency)
+        else:
+            for i in range(len(minima_fits)-1):
+                time_diff = minima_fits[i+1] - minima_fits[i]
+                full_time_period = time_diff # with no abs we see full period
+                frequency = 1/full_time_period
+                frequencies.append(frequency)
+            for i in range(len(maxima_fits)-1):
+                time_diff = maxima_fits[i+1] - maxima_fits[i]
+                full_time_period = time_diff # with no abs we see full period
+                frequency = 1/full_time_period
+                frequencies.append(frequency)
+        # find average and standard deviation
+        np_frequencies = array(frequencies)
+        ave_frequency = mean(np_frequencies)
+        err = std(np_frequencies)
+        return ave_frequency, err
+    """
+            
     def find_noise_floor(self, is_abs, is_semi_log,
                               minima_fits, minima_average_noise,
                               maxima_fits, maxima_average_noise):
