@@ -20,10 +20,30 @@ from calc_density import calc_density
 from calc_density_old import calc_density_old
 from calc_density_adapted import calc_density_adapted
 
+def scan_num_cells():
+    # constants
+    ncells = 20
+    npart = 200000
+    time_length = 20
+    num_time_steps = 50
+    L=4*numpy.pi
+    constants = [ncells, npart, time_length, num_time_steps,L] # [ncells,npart,time_length,num_time_steps,L]
+    
+    # variable
+    scan_var = 'ncells'#'ncells'/'npart'/'time_length'/'num_time_steps'/'length'
+    num_repeats = 10
+    start_var = numpy.log2(10)
+    stop_var =  numpy.log2(320)
+    N = 6
+    is_log = True
+    this_log_base = 2.0
+    
+    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
+
 def scan_num_parts():
     # constants
     ncells = 20
-    npart = 1000
+    npart = 200000
     time_length = 20
     num_time_steps = 50
     L=4*numpy.pi
@@ -32,7 +52,7 @@ def scan_num_parts():
     # variable
     scan_var = 'npart'#'ncells'/'npart'/'time_length'/'num_time_steps'/'length'
     num_repeats = 10
-    start_var = numpy.log10(10)
+    start_var = numpy.log10(1000)
     stop_var =  numpy.log10(1000000)
     N = 6
     is_log = True
@@ -40,10 +60,29 @@ def scan_num_parts():
     
     scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
 
+def scan_time_length():
+    # constants
+    ncells = 20
+    npart = 200000
+    time_length = 20
+    num_time_steps = 50
+    L=4*numpy.pi
+    constants = [ncells, npart, time_length, num_time_steps,L] # [ncells,npart,time_length,num_time_steps,L]
+    
+    # variable
+    scan_var = 'time_length'#'ncells'/'npart'/'time_length'/'num_time_steps'/'length'
+    num_repeats = 10
+    start_var = 5
+    stop_var = 200
+    N = 20
+    is_log = False
+    
+    scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants)
+
 def scan_numTimeSteps():
     # constants
     ncells = 20
-    npart = 1000
+    npart = 200000
     time_length = 20
     num_time_steps = 50
     L=4*numpy.pi
@@ -62,7 +101,7 @@ def scan_numTimeSteps():
 def scan_L():
     # constants
     ncells = 20
-    npart = 1000
+    npart = 200000
     time_length = 20
     num_time_steps = 50
     L=4*numpy.pi
@@ -79,7 +118,11 @@ def scan_L():
     scan_range(scan_var, num_repeats, start_var, stop_var, N, is_log, constants,this_log_base)
     
 if __name__ == "__main__":
-    scan_L()
+    #scan_num_cells()
+    scan_num_parts()
+    #scan_time_length()
+    #scan_numTimeSteps()
+    #scan_L()
     
     
     """

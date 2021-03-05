@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb 12 13:54:14 2021
+Created on Thu Mar  4 13:42:30 2021
 
 @author: dmg530
 """
+import numpy as np
+density_c = np.array([0,1,2,3,4,5,6,7,8,9])
+density_next_c = np.array([0,0,10,20,30,40,50,60,70,80,90])
+density_c += density_next_c[0:-1]
+print(density_c)
+density_c[0] += density_next_c[-1]
 
-import numpy 
-data = 10*numpy.random.random(100)
-data.sort()
-bins = numpy.linspace(0, 10, 10)
-digitized = numpy.digitize(data, bins)
-print(data)
-print(digitized)
-offset = data-digitized+1
-print(offset)
-
-a = numpy.zeros([1])
-print(a.type)
+print(density_c)
